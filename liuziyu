@@ -1,0 +1,67 @@
+#include <iostream>
+#include <algorithm>
+using namespace std;
+int n,m;			//n个物品，m个约束条件 
+int v[105],r[105];	//物品价值,剩余物品总价值
+int t[105];			//t[i]代表属性i的最大约束条件
+int x[105][105]; 	//物品i的j属性
+int tmp[105];		//属性i当前值 
+int res;			//结果
+int jian(int y){	//剪枝函数 
+	for(int i=0;i<m;i++){			//遍历m个属性 
+		if(tmp[i]+x[y][i]>t[i]){	//如果当前属性i的值加上x的i属性值大于最大约束条件t[i],则剪去该条分支 
+			return 0;
+		}
+	}
+	return 1;	//加上物品y的各个属性后，当前属性都不大于最大约束条件,则该物品可选 
+}
+int bound(int f,int y){		//限界函数 
+	if(y+v[f]+r[f+1]<=res)	//当前价值y加上物品f的价值加上物品f后所有物品价值小于等于已知最优解，则不可能有整体最优解，剪掉 
+		return false;
+	else					//否则，可以选择该物品走向下一分支
+		return true;
+} 
+
+void search_max(int f,int y){		//回溯法求解 
+	if(f==n){
+		if(y>res)					//物品遍历完毕且当前总价值大于已知最大值，更新最大值 
+			res=y;
+		return;
+	}
+	search_max(f+1,y);				//不选择物品f，直接走向下一个分支 
+	if(jian(f)==0||bound(f,y)==0)		//剪枝函数，任意函数等于0都应剪去 ，意思就是物品不可能放进去放进去超出最大约束条件或者肯定得不到最优解
+
+		return;
+	for(int i=0;i<m;i++){	
+		tmp[i]+=x[f][i]; 
+	}
+	search_max(f+1,y+v[f]);			//可以选择物品f，当前价值加上物品f的价值，走向下一个分支 
+	for(int i=0;i<m;i++){	//回溯 
+		tmp[i]-=x[f][i]; 
+	}
+} 
+
+
+int main()
+{ 
+	cout<<"请输入变量数n和约数m:";		//给出提示信息，由用户输入数据 
+	cin>>n>>m;
+	cout<<"输入n个物品价值:";
+	for(int i=0;i<n;i++){		//读入物品价值 
+		cin>>v[i];
+		r[0]+=v[i];
+	}
+	for(int i=0;i<m;i++){		//x[i][j]代表物品i的j属性 
+		cout<<"输入第"<<i<<"个属性";
+		for(int j=0;j<n;j++)
+			cin>>x[j][i];
+	}
+	cout<<"输入m个属性的约束条件:";
+	for(int i=0;i<m;i++)		//读入最大约束条件值 
+		cin>>t[i];
+	for(int i=1;i<=n;i++)		//rest[i]代表物品i后所有物品总价值 
+		r[i]=r[i-1]-r[i];
+	search_max(0,0); 			//回溯法求解在约束条件内的最大价值 
+	cout<<"最大价值为:"<<res<<"元"<<endl;
+	return 0;
+}
